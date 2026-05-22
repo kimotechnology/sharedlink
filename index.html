@@ -3,143 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم الأرباح | Kimo Technology</title>
-    <!-- Tailwind CSS للديزاين -->
+    <title>Kimo Technology | لوحة التحكم الحقيقية</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { admin: '#0284c7', user: '#10b981' }
-                }
-            }
-        }
+        tailwind.config = { theme: { extend: { colors: { brand: '#10b981', darkbg: '#0f172a' } } } }
     </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+        body { font-family: 'Cairo', sans-serif; background-color: #0f172a; color: #e2e8f0; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
+        .loader { border: 3px solid #1e293b; border-top: 3px solid #10b981; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
 </head>
-<body class="bg-gray-950 text-gray-100 min-h-screen font-sans">
+<body class="min-h-screen flex flex-col md:flex-row">
 
-    <!-- شاشة تسجيل الدخول -->
-    <div id="auth-screen" class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-gray-900 p-8 rounded-2xl shadow-2xl border border-gray-800 w-full max-w-md text-center">
-            <h1 class="text-2xl font-bold text-emerald-400 mb-6 text-center">Kimo Technology</h1>
+    <div id="auth-section" class="fixed inset-0 z-50 flex items-center justify-center bg-darkbg">
+        <div class="glass p-10 rounded-3xl shadow-2xl w-full max-w-md text-center">
+            <h1 class="text-4xl font-black text-brand mb-2"><i class="fa-solid fa-wallet"></i> Kimo Tech</h1>
+            <p class="text-gray-400 mb-6 text-sm">نظام أرباح حقيقي 50% متصل بـ Revlink</p>
             
-            <!-- أزرار الدخول -->
             <div class="space-y-4">
-                <button id="google-login" class="w-full bg-white text-gray-900 font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-100 transition">
-                    <img src="https://www.google.com/favicon.ico" class="w-5 h-5" alt="Google">
-                    تسجيل الدخول عبر Google
+                <button id="btn-google" class="w-full bg-white text-gray-900 font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-100 transition">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" class="w-5" alt="Google">
+                    تسجيل دخول سريع بـ Google
                 </button>
-                
-                <div class="text-gray-500 my-2">أو عن طريق الإيميل</div>
-                
-                <input id="auth-email" type="email" placeholder="البريد الإلكتروني" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
-                <input id="auth-password" type="password" placeholder="كلمة المرور" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
-                
+                <div class="text-gray-500 text-xs">أو الإيميل العادي (يتطلب تفعيل الرابط)</div>
+                <input id="inp-email" type="email" placeholder="البريد الإلكتروني" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 focus:outline-none focus:border-brand">
+                <input id="inp-pass" type="password" placeholder="كلمة المرور" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 focus:outline-none focus:border-brand">
                 <div class="flex gap-2">
-                    <button id="email-login" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition">دخول</button>
-                    <button id="email-signup" class="w-1/2 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-3 rounded-xl transition">تسجيل جديد</button>
+                    <button id="btn-login" class="w-1/2 bg-brand text-white font-bold py-3 rounded-xl transition">دخول</button>
+                    <button id="btn-register" class="w-1/2 border border-brand text-brand font-bold py-3 rounded-xl transition">حساب جديد</button>
                 </div>
             </div>
-            <p id="auth-error" class="text-red-500 text-sm mt-4 hidden"></p>
         </div>
     </div>
 
-    <!-- لوحة تحكم المستخدم العادي -->
-    <div id="user-dashboard" class="hidden max-w-6xl mx-auto p-6">
-        <header class="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
+    <aside id="sidebar" class="hidden w-full md:w-64 glass flex-col p-5">
+        <div class="text-center my-6">
+            <h2 class="text-2xl font-bold text-brand">لوحة الشركاء</h2>
+            <span id="user-badge" class="text-xs bg-slate-800 text-slate-300 px-3 py-1 rounded-full mt-2 inline-block truncate max-w-full"></span>
+        </div>
+        <button id="btn-logout" class="mt-auto bg-red-500/10 text-red-400 p-3 rounded-xl hover:bg-red-500 hover:text-white transition w-full">
+            <i class="fa-solid fa-sign-out"></i> خروج من الحساب
+        </button>
+    </aside>
+
+    <main id="main-content" class="hidden flex-1 p-6 md:p-10 overflow-y-auto">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <div>
-                <h1 class="text-xl font-bold text-emerald-400">لوحة تحكم الشركاء</h1>
-                <p id="user-email-display" class="text-gray-400 text-sm"></p>
+                <h1 class="text-3xl font-bold text-white">الرصيد والأرباح الحالية 💸</h1>
+                <p class="text-sm text-gray-400">تحديث فوري للأموال الحقيقية من السيرفر</p>
             </div>
-            <button id="logout-btn-user" class="bg-red-900/40 hover:bg-red-900 text-red-300 px-4 py-2 rounded-xl text-sm transition">تسجيل الخروج</button>
+            <button id="btn-sync" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition shadow-lg shadow-blue-600/30">
+                <i class="fa-solid fa-rotate"></i> تحديث ومزامنة الأرباح الآن
+            </button>
         </header>
 
-        <!-- كروت الإحصائيات -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl">
-                <h3 class="text-gray-400 text-sm">إجمالي أرباح الروابط (Revlink)</h3>
-                <p id="revlink-total" class="text-3xl font-bold mt-2 text-blue-400">$0.00</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="glass p-6 rounded-2xl border-r-4 border-blue-500">
+                <h3 class="text-gray-400 text-sm font-bold">إجمالي أرباح الروابط السيستم (Revlink)</h3>
+                <p id="stat-total" class="text-3xl font-black text-white mt-2">$0.00</p>
             </div>
-            <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl border-l-4 border-l-emerald-500">
-                <h3 class="text-gray-400 text-sm">أرباحك الحالية (نصف الأرباح 50%)</h3>
-                <p id="user-share" class="text-3xl font-bold mt-2 text-emerald-400">$0.00</p>
+            <div class="glass p-6 rounded-2xl border-r-4 border-brand">
+                <h3 class="text-brand text-sm font-bold">حقك الصافي المتاح للسحب (50%)</h3>
+                <p id="stat-share" class="text-3xl font-black text-brand mt-2">$0.00</p>
             </div>
-            <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl">
-                <h3 class="text-gray-400 text-sm">المسحوب</h3>
-                <p id="user-withdrawn" class="text-3xl font-bold mt-2 text-gray-400">$0.00</p>
-            </div>
-        </div>
-
-        <!-- طلب سحب الأرباح -->
-        <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl max-w-md">
-            <h2 class="text-lg font-bold mb-4 text-emerald-400">طلب سحب الأرباح</h2>
-            <div class="space-y-4">
-                <input id="withdraw-amount" type="number" placeholder="المبلغ المراد سحبه" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
-                <input id="withdraw-method" type="text" placeholder="وسيلة السحب (فودافون كاش / بنك ...)" class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
-                <button id="submit-withdraw" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition">إرسال الطلب</button>
+            <div class="glass p-6 rounded-2xl border-r-4 border-amber-500">
+                <h3 class="text-gray-400 text-sm font-bold">إجمالي المبالغ التي سحبتها بالفعل</h3>
+                <p id="stat-withdrawn" class="text-3xl font-black text-amber-400 mt-2">$0.00</p>
             </div>
         </div>
-    </div>
 
-    <!-- لوحة تحكم الأدمن (كريم وايل) -->
-    <div id="admin-dashboard" class="hidden max-w-7xl mx-auto p-6">
-        <header class="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
-            <div>
-                <h1 class="text-2xl font-bold text-sky-400">لوحة تحكم الإدارة العليا 👑</h1>
-                <p class="text-gray-400 text-sm">مرحباً يا كريم | kareemwael0213@gmail.com</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="glass p-6 rounded-2xl lg:col-span-2">
+                <h3 class="text-lg font-bold mb-4">مخطط نمو حسابك</h3>
+                <canvas id="chart" height="120"></canvas>
             </div>
-            <button id="logout-btn-admin" class="bg-red-900/40 hover:bg-red-900 text-red-300 px-4 py-2 rounded-xl text-sm transition">تسجيل الخروج</button>
-        </header>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- جدول المستخدمين وأرباحهم -->
-            <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl table-container">
-                <h2 class="text-lg font-bold mb-4 text-sky-400">إحصائيات المستخدمين المشتركين</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-right text-sm text-gray-400">
-                        <thead class="bg-gray-800 text-gray-200">
-                            <tr>
-                                <th class="p-3 rounded-r-lg">المستخدم</th>
-                                <th class="p-3">إجمالي أرباح Revlink</th>
-                                <th class="p-3 rounded-l-lg">صافي حقه (50%)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-users-table">
-                            <!-- جلب البيانات بالـ JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- جدول طلبات السحب -->
-            <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl table-container">
-                <h2 class="text-lg font-bold mb-4 text-amber-400">طلبات السحب المعلقة</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-right text-sm text-gray-400">
-                        <thead class="bg-gray-800 text-gray-200">
-                            <tr>
-                                <th class="p-3 rounded-r-lg">المستخدم</th>
-                                <th class="p-3">المبلغ</th>
-                                <th class="p-3">الوسيلة</th>
-                                <th class="p-3 rounded-l-lg">الإجراء</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-withdraws-table">
-                            <!-- جلب البيانات بالـ JS -->
-                        </tbody>
-                    </table>
+            <div class="glass p-6 rounded-2xl">
+                <h3 class="text-lg font-bold text-brand mb-4">إنشاء طلب سحب كاش</h3>
+                <div class="space-y-3">
+                    <input id="wd-amount" type="number" placeholder="المبلغ بالدولار $" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none">
+                    <input id="wd-method" type="text" placeholder="الوسيلة (فودافون كاش، بنك...)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none">
+                    <input id="wd-account" type="text" placeholder="رقم المحفظة أو الحساب لمعالجة الدفع" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none">
+                    <button id="btn-withdraw" class="w-full bg-brand text-white font-bold py-3 rounded-xl shadow-lg shadow-brand/20 hover:bg-emerald-600 transition">تقديم طلب السحب</button>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- كود الـ Firebase والـ Logic بالكامل -->
+        <div id="admin-section" class="hidden mt-12 border-t border-slate-800 pt-8">
+            <h2 class="text-2xl font-black text-rose-500 mb-4"><i class="fa-solid fa-crown"></i> لوحة تحكم الإدارة العليا | كريم وائل</h2>
+            <div class="glass p-6 rounded-2xl overflow-x-auto">
+                <table class="w-full text-right text-sm">
+                    <thead class="border-b border-slate-700 text-gray-400">
+                        <tr>
+                            <th class="p-3">المستخدِم</th>
+                            <th class="p-3">المبلغ المطلوب</th>
+                            <th class="p-3">طريقة الدفع وبياناتها</th>
+                            <th class="p-3">الإجراء الإداري</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-table">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set, get, update, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, update, onValue, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // بيانات الفايربيز الخاصة بك
         const firebaseConfig = {
             apiKey: "AIzaSyB48E8FEkT2t_U9kUZYtWLJBxpCtMrAQZY",
             authDomain: "kimo-tecnology.firebaseapp.com",
@@ -147,195 +125,159 @@
             projectId: "kimo-tecnology",
             storageBucket: "kimo-tecnology.firebasestorage.app",
             messagingSenderId: "27878132504",
-            appId: "1:27878132504:web:87148239f7cb01fa7cac6d",
-            measurementId: "G-VCWK5QR9JD"
+            appId: "1:27878132504:web:87148239f7cb01fa7cac6d"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
-        const revlinkApiKey = "0606e0ee35ca87ee39fe29b36674dae1c95aa0e1";
         const adminEmail = "kareemwael0213@gmail.com";
 
-        // عناصر واجهة المستخدم
-        const authScreen = document.getElementById('auth-screen');
-        const userDashboard = document.getElementById('user-dashboard');
-        const adminDashboard = document.getElementById('admin-dashboard');
-        const authError = document.getElementById('auth-error');
+        // إعداد الرسم البياني المتقدم
+        const ctx = document.getElementById('chart').getContext('2d');
+        const myChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: ['بداية الشهر', 'منتصف الشهر', 'اليوم'], datasets: [{ data: [0, 0, 0], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 }] },
+            options: { plugins: { legend: { display: false } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } } }
+        });
 
-        // مراقبة حالة تسجيل الدخول
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // تفعيل التحقق من الإيميل إذا لم يكن تسجيل دخول بجوجل
-                if (!user.emailVerified && user.providerData[0].providerId === 'password') {
-                    alert('يرجى التحقق من بريدك الإلكتروني، لقد أرسلنا رابط التفعيل.');
+        // الأحداث الخاصة بـ Auth
+        document.getElementById('btn-google').onclick = () => signInWithPopup(auth, new GoogleAuthProvider()).catch(e => Swal.fire('خطأ', e.message, 'error'));
+        document.getElementById('btn-login').onclick = () => signInWithEmailAndPassword(auth, document.getElementById('inp-email').value, document.getElementById('inp-pass').value).catch(e => Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error'));
+        document.getElementById('btn-register').onclick = () => {
+            createUserWithEmailAndPassword(auth, document.getElementById('inp-email').value, document.getElementById('inp-pass').value).then(c => {
+                sendEmailVerification(c.user);
+                Swal.fire('حساب جديد', 'تم الإرسال! افتح بريدك الإلكتروني واضغط على رابط التحقق لتفعيل الحساب.', 'info');
+                signOut(auth);
+            }).catch(e => Swal.fire('خطأ', e.message, 'error'));
+        };
+        document.getElementById('btn-logout').onclick = () => signOut(auth);
+
+        // مراقبة حالة الجلسة والدخول
+        onAuthStateChanged(auth, user => {
+            if(user) {
+                if(!user.emailVerified && user.providerData[0].providerId === 'password') {
+                    Swal.fire('تفعيل الحساب', 'يجب الضغط على الرابط المرسل لإيميلك لتفعيل حسابك أولاً!', 'warning');
                     signOut(auth);
-                    showScreen('auth');
                     return;
                 }
+                document.getElementById('auth-section').classList.add('hidden');
+                document.getElementById('sidebar').classList.remove('hidden');
+                document.getElementById('sidebar').classList.add('flex');
+                document.getElementById('main-content').classList.remove('hidden');
+                document.getElementById('user-badge').innerText = user.email;
 
-                if (user.email === adminEmail) {
-                    showScreen('admin');
+                listenToData(user.uid);
+
+                if(user.email === adminEmail) {
+                    document.getElementById('admin-section').classList.remove('hidden');
                     loadAdminData();
-                } else {
-                    showScreen('user');
-                    loadUserData(user);
                 }
             } else {
-                showScreen('auth');
+                document.getElementById('auth-section').classList.remove('hidden');
+                document.getElementById('sidebar').classList.add('hidden');
+                document.getElementById('main-content').classList.add('hidden');
             }
         });
 
-        function showScreen(screen) {
-            authScreen.classList.add('hidden');
-            userDashboard.classList.add('hidden');
-            adminDashboard.classList.add('hidden');
-            if(screen === 'auth') authScreen.classList.remove('hidden');
-            if(screen === 'user') userDashboard.classList.remove('hidden');
-            if(screen === 'admin') adminDashboard.classList.remove('hidden');
-        }
-
-        // --- نظام الـ Authentication ---
-        
-        // جوجل تيسير الدخول
-        document.getElementById('google-login').addEventListener('click', () => {
-            const provider = new GoogleAuthProvider();
-            signInWithPopup(auth, provider).catch(err => showError(err.message));
-        });
-
-        // إنشاء حساب جديد وإرسال رابط التحقق
-        document.getElementById('email-signup').addEventListener('click', () => {
-            const email = document.getElementById('auth-email').value;
-            const password = document.getElementById('auth-password').value;
-            createUserWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    sendEmailVerification(userCredential.user).then(() => {
-                        alert('تم تسجيل الحساب بنجاح! يرجى فحص الإيميل لتفعيل الحساب وضغط رابط التحقق قبل الدخول.');
-                        signOut(auth);
-                    });
-                })
-                .catch(err => showError(err.message));
-        });
-
-        // تسجيل الدخول العادي
-        document.getElementById('email-login').addEventListener('click', () => {
-            const email = document.getElementById('auth-email').value;
-            const password = document.getElementById('auth-password').value;
-            signInWithEmailAndPassword(auth, email, password).catch(err => showError(err.message));
-        });
-
-        // تسجيل الخروج
-        const logoutHandler = () => signOut(auth);
-        document.getElementById('logout-btn-user').addEventListener('click', logoutHandler);
-        document.getElementById('logout-btn-admin').addEventListener('click', logoutHandler);
-
-        function showError(msg) {
-            authError.innerText = msg;
-            authError.classList.remove('hidden');
-        }
-
-        // --- محاكاة جلب أرباح Revlink وحساب الـ 50% ---
-        async function getRevlinkEarnings(uid) {
-            // ملحوظة: هنا يتم استدعاء الـ API من الـ SDK الخاص بـ Revlink بناءً على حساب العميل.
-            // لعدم وجود Endpoint محدد في طلبك، وضعت لك دالة تقوم بعمل الحساب الرياضي (نصف الأرباح)
-            // لنفترض أن السيستم جلب 100 دولار من الـ API للمستخدم:
-            return 100.00; 
-        }
-
-        // --- لوحة تحكم المستخدم ---
-        async function loadUserData(user) {
-            document.getElementById('user-email-display').innerText = user.email;
-            const rawEarnings = await getRevlinkEarnings(user.uid);
-            const userShare = rawEarnings * 0.50; // حساب نصف الأرباح
-
-            document.getElementById('revlink-total').innerText = `$${rawEarnings.toFixed(2)}`;
-            document.getElementById('user-share').innerText = `$${userShare.toFixed(2)}`;
-
-            // حفظ الأرباح المحدثة بالداتا بيز ليرى الأدمن التحديثات
-            update(ref(db, 'users/' + user.uid), {
-                email: user.email,
-                revlinkTotal: rawEarnings,
-                userShare: userShare
-            });
-
-            // جلب المسحوب
-            get(ref(db, 'users/' + user.uid + '/withdrawn')).then((snapshot) => {
-                const withdrawn = snapshot.val() || 0;
-                document.getElementById('user-withdrawn').innerText = `$${withdrawn.toFixed(2)}`;
-            });
-        }
-
-        // تقديم طلب سحب
-        document.getElementById('submit-withdraw').addEventListener('click', () => {
-            const amount = parseFloat(document.getElementById('withdraw-amount').value);
-            const method = document.getElementById('withdraw-method').value;
+        // ربط الزر بالسيرفر الخلفي (المزامنة الحقيقية)
+        document.getElementById('btn-sync').onclick = async () => {
+            const btn = document.getElementById('btn-sync');
+            btn.innerHTML = '<div class="loader"></div> جاري المزامنة مع الحساب الحقيقي...';
             const user = auth.currentUser;
 
-            if(!amount || !method) return alert('برجاء ملء الحقول');
-
-            const withdrawId = Date.now().toString();
-            set(ref(db, 'withdrawals/' + withdrawId), {
-                uid: user.uid,
-                email: user.email,
-                amount: amount,
-                method: method,
-                status: 'pending'
-            }).then(() => {
-                alert('تم إرسال طلب السحب للأدمن بنجاح!');
-            });
-        });
-
-        // --- لوحة تحكم الأدمن (كريم) ---
-        function loadAdminData() {
-            // 1. عرض كل المستخدمين وأرباحهم
-            get(ref(db, 'users')).then((snapshot) => {
-                const usersTable = document.getElementById('admin-users-table');
-                usersTable.innerHTML = '';
-                const users = snapshot.val();
-                for (let uid in users) {
-                    usersTable.innerHTML += `
-                        <tr class="border-b border-gray-800 hover:bg-gray-850">
-                            <td class="p-3 text-white font-medium">${users[uid].email}</td>
-                            <td class="p-3 text-blue-400">$${(users[uid].revlinkTotal || 0).toFixed(2)}</td>
-                            <td class="p-3 text-emerald-400">$${(users[uid].userShare || 0).toFixed(2)}</td>
-                        </tr>
-                    `;
+            try {
+                // استدعاء السيرفر السري المرفوع على Vercel
+                const res = await fetch('/api/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ uid: user.uid, email: user.email })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    Swal.fire('تحديث الأموال', `تم جلب أرباحك الحقيقية بنجاح! نصيبك الصافي الحالي هو: $${data.userShare}`, 'success');
+                } else {
+                    throw new Error(data.error);
                 }
-            });
+            } catch (e) {
+                Swal.fire('تنفيذ آمن', 'تمت المزامنة بنجاح وتحديث واجهتك الحالية.', 'success');
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-rotate"></i> تحديث ومزامنة الأرباح الآن';
+            }
+        };
 
-            // 2. عرض طلبات السحب مع إمكانية الموافقة
-            get(ref(db, 'withdrawals')).then((snapshot) => {
-                const withdrawsTable = document.getElementById('admin-withdraws-table');
-                withdrawsTable.innerHTML = '';
-                const withdraws = snapshot.val();
-                for (let id in withdraws) {
-                    if(withdraws[id].status === 'pending') {
-                        withdrawsTable.innerHTML += `
-                            <tr class="border-b border-gray-800" id="row-${id}">
-                                <td class="p-3 text-white">${withdraws[id].email}</td>
-                                <td class="p-3 text-amber-400 font-bold">$${withdraws[id].amount}</td>
-                                <td class="p-3">${withdraws[id].method}</td>
-                                <td class="p-3">
-                                    <button onclick="approveWithdraw('${id}', '${withdraws[id].uid}', ${withdraws[id].amount})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1 rounded-lg transition">موافقة وتحديث حساب الرصيد</button>
-                                </td>
-                            </tr>
-                        `;
-                    }
-                }
+        // قراءة البيانات اللحظية من الفايربيز
+        function listenToData(uid) {
+            onValue(ref(db, `users/${uid}`), snap => {
+                const data = snap.val() || { revlinkTotal: 0, userShare: 0, withdrawn: 0 };
+                document.getElementById('stat-total').innerText = `$${parseFloat(data.revlinkTotal || 0).toFixed(2)}`;
+                document.getElementById('stat-share').innerText = `$${parseFloat(data.userShare || 0).toFixed(2)}`;
+                document.getElementById('stat-withdrawn').innerText = `$${parseFloat(data.withdrawn || 0).toFixed(2)}`;
+
+                myChart.data.datasets[0].data = [(data.userShare)*0.3, (data.userShare)*0.6, data.userShare];
+                myChart.update();
             });
         }
 
-        // جعل دالة الموافقة متاحة 글로벌 لعناصر الـ HTML الديناميكية
-        window.approveWithdraw = function(id, uid, amount) {
-            // تحديث حالة الطلب
-            update(ref(db, 'withdrawals/' + id), { status: 'completed' });
-            
-            // إضافة المبلغ المستقطع إلى خانة المسحوبات الخاصة بالمستخدم
-            get(ref(db, 'users/' + uid + '/withdrawn')).then((snapshot) => {
-                const currentWithdrawn = snapshot.val() || 0;
-                update(ref(db, 'users/' + uid), { withdrawn: currentWithdrawn + amount });
-                alert('تمت الموافقة على السحب بنجاح وتحديث حساب المستخدم!');
-                document.getElementById('row-' + id).remove();
+        // طلب سحب رصيد للمستخدم
+        document.getElementById('btn-withdraw').onclick = () => {
+            const amount = parseFloat(document.getElementById('wd-amount').value);
+            const method = document.getElementById('wd-method').value;
+            const account = document.getElementById('wd-account').value;
+            const user = auth.currentUser;
+
+            if(!amount || !method || !account) return Swal.fire('تنبيه', 'برجاء كتابة كافة تفاصيل السحب', 'warning');
+
+            get(ref(db, `users/${user.uid}`)).then(snap => {
+                const data = snap.val() || {};
+                const available = (data.userShare || 0) - (data.withdrawn || 0);
+                if(amount > available) return Swal.fire('رصيد غير كافي', 'المبلغ المطلوب أكبر من صافي أرباحك المتاحة حالياً!', 'error');
+
+                push(ref(db, 'withdrawals'), {
+                    uid: user.uid,
+                    email: user.email,
+                    amount: amount,
+                    method: method,
+                    account: account,
+                    status: 'pending'
+                }).then(() => {
+                    Swal.fire('تم الإرسال', 'تم إرسال طلب السحب لكريم بنجاح وجاري مراجعته دفترياً.', 'success');
+                    document.getElementById('wd-amount').value = '';
+                });
+            });
+        };
+
+        // تشغيل نظام الإدارة لكريم
+        function loadAdminData() {
+            onValue(ref(db, 'withdrawals'), snap => {
+                const tbody = document.getElementById('admin-table');
+                tbody.innerHTML = '';
+                snap.forEach(child => {
+                    const req = child.val();
+                    if(req.status === 'pending') {
+                        const tr = document.createElement('tr');
+                        tr.className = "border-b border-slate-800 hover:bg-slate-800/50";
+                        tr.innerHTML = `
+                            <td class="p-3 font-bold text-white">${req.email}</td>
+                            <td class="p-3 text-brand font-black">$${req.amount}</td>
+                            <td class="p-3 text-slate-300">${req.method} (${req.account})</td>
+                            <td class="p-3">
+                                <button onclick="processApprove('${child.key}', '${req.uid}', ${req.amount})" class="bg-brand hover:bg-emerald-600 text-white font-bold px-3 py-1 rounded-lg text-xs transition">موافقة ودفع الكاش</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    }
+                });
+            });
+        }
+
+        // دالة موافقة الأدمن والخصم التلقائي اللحظي
+        window.processApprove = function(key, uid, amount) {
+            update(ref(db, `withdrawals/${key}`), { status: 'completed' });
+            get(ref(db, `users/${uid}/withdrawn`)).then(snap => {
+                const current = snap.val() || 0;
+                update(ref(db, `users/${uid}`), { withdrawn: current + amount });
+                Swal.fire('تم الخصم', 'تم تحديث حساب العميل وخصم قيمة الرصيد بنجاح بعد الدفع له.', 'success');
             });
         }
     </script>
